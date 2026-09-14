@@ -7,54 +7,56 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 export class TasksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(dto: CreateTaskDto) {
+  async create(createTaskDto: CreateTaskDto, userId: number) {
     return this.prisma.task.create({
       data: {
-        title: dto.title.trim(),
-        description: dto.description?.trim(),
-        completed: dto.completed ?? false,
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        completed: createTaskDto.completed ?? false,
+        user: {
+          connect: { id: userId },
+        },
       },
     });
   }
 
-  findAll() {
+  async findAll(userId: number) {
     return this.prisma.task.findMany({
-      orderBy: { createdAt: 'desc' },
+      where: {
+        userId,
+      },
     });
   }
 
-  async findOne(id: number) {
-    const task = await this.prisma.task.findUnique({
-      where: { id },
+  async findOne(id: number, userId: number) {
+    const task = await this.prisma.task.findFirst({
+      where: {
+        id,
+        userId,
+      },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task ${id} not found`);
+      throw new NotFoundException(`Tarea con id ${id} no encontrada`);
     }
 
     return task;
   }
 
-  async update(id: number, dto: UpdateTaskDto) {
-    await this.findOne(id);
+  async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
+    await this.findOne(id, userId);
 
     return this.prisma.task.update({
       where: { id },
-      data: {
-        title: dto.title?.trim(),
-        description: dto.description?.trim(),
-        completed: dto.completed,
-      },
+      data: updateTaskDto,
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(id: number, userId: number) {
+    await this.findOne(id, userId);
 
-    await this.prisma.task.delete({
+    return this.prisma.task.delete({
       where: { id },
     });
-
-    return { message: `Task ${id} deleted successfully` };
   }
 }

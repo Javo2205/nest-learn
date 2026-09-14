@@ -1,44 +1,60 @@
+import { Request } from 'express';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
+interface AuthenticatedRequest extends Request {
+    user: {
+        id: number;
+        email: string;
+    };
+}
 export declare class TasksController {
     private readonly tasksService;
     constructor(tasksService: TasksService);
-    create(dto: CreateTaskDto): import("../generated/prisma/models").Prisma__TaskClient<{
+    create(createTaskDto: CreateTaskDto, request: AuthenticatedRequest): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, {
-        omit: import("../generated/prisma/internal/prismaNamespace").GlobalOmitConfig | undefined;
+        userId: number;
     }>;
-    findAll(): import("../generated/prisma/internal/prismaNamespace").PrismaPromise<{
+    findAll(request: AuthenticatedRequest): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }[]>;
-    findOne(id: number): Promise<{
+    findOne(id: number, request: AuthenticatedRequest): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }>;
-    update(id: number, dto: UpdateTaskDto): Promise<{
+    update(id: number, updateTaskDto: UpdateTaskDto, request: AuthenticatedRequest): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }>;
-    remove(id: number): Promise<{
-        message: string;
+    remove(id: number, request: AuthenticatedRequest): Promise<{
+        title: string;
+        description: string | null;
+        completed: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        userId: number;
     }>;
 }
+export {};

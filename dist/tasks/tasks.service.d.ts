@@ -4,41 +4,49 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 export declare class TasksService {
     private readonly prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateTaskDto): import("../generated/prisma/models").Prisma__TaskClient<{
+    create(createTaskDto: CreateTaskDto, userId: number): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
-    }, never, import("@prisma/client/runtime/client").DefaultArgs, {
-        omit: import("../generated/prisma/internal/prismaNamespace").GlobalOmitConfig | undefined;
+        userId: number;
     }>;
-    findAll(): import("../generated/prisma/internal/prismaNamespace").PrismaPromise<{
+    findAll(userId: number): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }[]>;
-    findOne(id: number): Promise<{
+    findOne(id: number, userId: number): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }>;
-    update(id: number, dto: UpdateTaskDto): Promise<{
+    update(id: number, updateTaskDto: UpdateTaskDto, userId: number): Promise<{
         title: string;
         description: string | null;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
         id: number;
+        userId: number;
     }>;
-    remove(id: number): Promise<{
-        message: string;
+    remove(id: number, userId: number): Promise<{
+        title: string;
+        description: string | null;
+        completed: boolean;
+        createdAt: Date;
+        updatedAt: Date;
+        id: number;
+        userId: number;
     }>;
 }

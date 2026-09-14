@@ -17,46 +17,49 @@ let TasksService = class TasksService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    create(dto) {
+    async create(createTaskDto, userId) {
         return this.prisma.task.create({
             data: {
-                title: dto.title.trim(),
-                description: dto.description?.trim(),
-                completed: dto.completed ?? false,
+                title: createTaskDto.title,
+                description: createTaskDto.description,
+                completed: createTaskDto.completed ?? false,
+                user: {
+                    connect: { id: userId },
+                },
             },
         });
     }
-    findAll() {
+    async findAll(userId) {
         return this.prisma.task.findMany({
-            orderBy: { createdAt: 'desc' },
+            where: {
+                userId,
+            },
         });
     }
-    async findOne(id) {
-        const task = await this.prisma.task.findUnique({
-            where: { id },
+    async findOne(id, userId) {
+        const task = await this.prisma.task.findFirst({
+            where: {
+                id,
+                userId,
+            },
         });
         if (!task) {
-            throw new common_1.NotFoundException(`Task ${id} not found`);
+            throw new common_1.NotFoundException(`Tarea con id ${id} no encontrada`);
         }
         return task;
     }
-    async update(id, dto) {
-        await this.findOne(id);
+    async update(id, updateTaskDto, userId) {
+        await this.findOne(id, userId);
         return this.prisma.task.update({
             where: { id },
-            data: {
-                title: dto.title?.trim(),
-                description: dto.description?.trim(),
-                completed: dto.completed,
-            },
+            data: updateTaskDto,
         });
     }
-    async remove(id) {
-        await this.findOne(id);
-        await this.prisma.task.delete({
+    async remove(id, userId) {
+        await this.findOne(id, userId);
+        return this.prisma.task.delete({
             where: { id },
         });
-        return { message: `Task ${id} deleted successfully` };
     }
 };
 exports.TasksService = TasksService;

@@ -11,12 +11,19 @@ const common_1 = require("@nestjs/common");
 const tasks_service_1 = require("./tasks.service");
 const tasks_controller_1 = require("./tasks.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const passport_1 = require("@nestjs/passport");
 let TasksModule = class TasksModule {
 };
 exports.TasksModule = TasksModule;
 exports.TasksModule = TasksModule = __decorate([
     (0, common_1.Module)({
-        imports: [prisma_module_1.PrismaModule],
+        imports: [
+            prisma_module_1.PrismaModule,
+            passport_1.PassportModule.register({
+                defaultStrategy: 'jwt',
+                session: false,
+            }),
+        ],
         controllers: [tasks_controller_1.TasksController],
         providers: [tasks_service_1.TasksService],
     })
