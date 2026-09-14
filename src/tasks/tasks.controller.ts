@@ -15,6 +15,18 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { TaskResponseDto } from '../common/dto/task-response.dto';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -23,11 +35,21 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
+@ApiTags('Tareas')
+@ApiBearerAuth('JWT-auth')
 @UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
+  @ApiOperation({ summary: 'Crear una tarea para el usuario autenticado' })
+  @ApiCreatedResponse({
+    description: 'Tarea creada correctamente',
+    type: TaskResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'JWT ausente, inválido o expirado',
+  })
   @Post()
   create(
     @Body() createTaskDto: CreateTaskDto,
@@ -36,11 +58,36 @@ export class TasksController {
     return this.tasksService.create(createTaskDto, request.user.id);
   }
 
+  @ApiOperation({ summary: 'Obtener las tareas del usuario autenticado' })
+  @ApiOkResponse({
+    description: 'Lista de tareas del usuario',
+    type: [TaskResponseDto],
+  })
+  @ApiUnauthorizedResponse({
+    description: 'JWT ausente, inválido o expirado',
+  })
   @Get()
   findAll(@Req() request: AuthenticatedRequest) {
     return this.tasksService.findAll(request.user.id);
   }
 
+  @ApiOperation({ summary: 'Obtener una tarea propia por ID' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'ID numérico de la tarea',
+  })
+  @ApiOkResponse({
+    description: 'Tarea encontrada',
+    type: TaskResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Tarea no encontrada o no pertenece al usuario',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'JWT ausente, inválido o expirado',
+  })
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -49,6 +96,23 @@ export class TasksController {
     return this.tasksService.findOne(id, request.user.id);
   }
 
+  @ApiOperation({ summary: 'Actualizar una tarea propia' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'ID numérico de la tarea',
+  })
+  @ApiOkResponse({
+    description: 'Tarea actualizada correctamente',
+    type: TaskResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Tarea no encontrada o no pertenece al usuario',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'JWT ausente, inválido o expirado',
+  })
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -58,6 +122,23 @@ export class TasksController {
     return this.tasksService.update(id, updateTaskDto, request.user.id);
   }
 
+  @ApiOperation({ summary: 'Eliminar una tarea propia' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    example: 1,
+    description: 'ID numérico de la tarea',
+  })
+  @ApiOkResponse({
+    description: 'Tarea eliminada correctamente',
+    type: TaskResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Tarea no encontrada o no pertenece al usuario',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'JWT ausente, inválido o expirado',
+  })
   @Delete(':id')
   remove(
     @Param('id', ParseIntPipe) id: number,

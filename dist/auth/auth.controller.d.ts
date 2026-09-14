@@ -5,9 +5,9 @@ export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     register(registerDto: RegisterDto): Promise<{
-        createdAt: Date;
         id: number;
         email: string;
+        createdAt: Date;
     }>;
     login(loginDto: LoginDto): Promise<{
         access_token: string;

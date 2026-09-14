@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateTaskDto = void 0;
 const class_validator_1 = require("class-validator");
+const swagger_1 = require("@nestjs/swagger");
 class CreateTaskDto {
     title;
     description;
@@ -18,16 +19,30 @@ class CreateTaskDto {
 }
 exports.CreateTaskDto = CreateTaskDto;
 __decorate([
+    (0, swagger_1.ApiProperty)({
+        example: 'Terminar documentación',
+        description: 'Título de la tarea',
+        minLength: 3,
+    }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(3),
     __metadata("design:type", String)
 ], CreateTaskDto.prototype, "title", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: 'Agregar documentación Swagger a la API',
+        description: 'Descripción opcional de la tarea',
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateTaskDto.prototype, "description", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: false,
+        description: 'Indica si la tarea está completada',
+        default: false,
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
