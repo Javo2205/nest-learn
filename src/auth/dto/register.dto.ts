@@ -12,9 +12,9 @@ export class RegisterDto {
   @ApiProperty({
     example: '123456',
     description: 'Contraseña con al menos 6 caracteres',
-    minLength: 6,
+    minLength: 8,
   })
   @IsString()
-  @MinLength(6)
+  @MinLength(8)
   password: string;
 }

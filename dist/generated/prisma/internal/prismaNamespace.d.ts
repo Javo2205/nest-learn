@@ -161,6 +161,7 @@ export type FieldRef<Model, FieldType> = runtime.FieldRef<Model, FieldType>;
 type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRef<Model, FieldType>;
 export declare const ModelName: {
     readonly User: "User";
+    readonly AuthToken: "AuthToken";
     readonly Task: "Task";
 };
 export type ModelName = (typeof ModelName)[keyof typeof ModelName];
@@ -174,7 +175,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         omit: GlobalOmitOptions;
     };
     meta: {
-        modelProps: "user" | "task";
+        modelProps: "user" | "authToken" | "task";
         txIsolationLevel: TransactionIsolationLevel;
     };
     model: {
@@ -249,6 +250,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
                 count: {
                     args: Prisma.UserCountArgs<ExtArgs>;
                     result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number;
+                };
+            };
+        };
+        AuthToken: {
+            payload: Prisma.$AuthTokenPayload<ExtArgs>;
+            fields: Prisma.AuthTokenFieldRefs;
+            operations: {
+                findUnique: {
+                    args: Prisma.AuthTokenFindUniqueArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload> | null;
+                };
+                findUniqueOrThrow: {
+                    args: Prisma.AuthTokenFindUniqueOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                findFirst: {
+                    args: Prisma.AuthTokenFindFirstArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload> | null;
+                };
+                findFirstOrThrow: {
+                    args: Prisma.AuthTokenFindFirstOrThrowArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                findMany: {
+                    args: Prisma.AuthTokenFindManyArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>[];
+                };
+                create: {
+                    args: Prisma.AuthTokenCreateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                createMany: {
+                    args: Prisma.AuthTokenCreateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                createManyAndReturn: {
+                    args: Prisma.AuthTokenCreateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>[];
+                };
+                delete: {
+                    args: Prisma.AuthTokenDeleteArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                update: {
+                    args: Prisma.AuthTokenUpdateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                deleteMany: {
+                    args: Prisma.AuthTokenDeleteManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateMany: {
+                    args: Prisma.AuthTokenUpdateManyArgs<ExtArgs>;
+                    result: BatchPayload;
+                };
+                updateManyAndReturn: {
+                    args: Prisma.AuthTokenUpdateManyAndReturnArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>[];
+                };
+                upsert: {
+                    args: Prisma.AuthTokenUpsertArgs<ExtArgs>;
+                    result: runtime.Types.Utils.PayloadToResult<Prisma.$AuthTokenPayload>;
+                };
+                aggregate: {
+                    args: Prisma.AuthTokenAggregateArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AggregateAuthToken>;
+                };
+                groupBy: {
+                    args: Prisma.AuthTokenGroupByArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AuthTokenGroupByOutputType>[];
+                };
+                count: {
+                    args: Prisma.AuthTokenCountArgs<ExtArgs>;
+                    result: runtime.Types.Utils.Optional<Prisma.AuthTokenCountAggregateOutputType> | number;
                 };
             };
         };
@@ -362,10 +437,21 @@ export declare const UserScalarFieldEnum: {
     readonly email: "email";
     readonly password: "password";
     readonly name: "name";
+    readonly emailVerified: "emailVerified";
     readonly createdAt: "createdAt";
     readonly updatedAt: "updatedAt";
 };
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum];
+export declare const AuthTokenScalarFieldEnum: {
+    readonly id: "id";
+    readonly tokenHash: "tokenHash";
+    readonly type: "type";
+    readonly expiresAt: "expiresAt";
+    readonly usedAt: "usedAt";
+    readonly createdAt: "createdAt";
+    readonly userId: "userId";
+};
+export type AuthTokenScalarFieldEnum = (typeof AuthTokenScalarFieldEnum)[keyof typeof AuthTokenScalarFieldEnum];
 export declare const TaskScalarFieldEnum: {
     readonly id: "id";
     readonly title: "title";
@@ -395,9 +481,11 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>;
 export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String'>;
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>;
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>;
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>;
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>;
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>;
+export type EnumAuthTokenTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthTokenType'>;
+export type ListEnumAuthTokenTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AuthTokenType[]'>;
 export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>;
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>;
 export type BatchPayload = {
@@ -429,6 +517,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter;
 export type GlobalOmitConfig = {
     user?: Prisma.UserOmit;
+    authToken?: Prisma.AuthTokenOmit;
     task?: Prisma.TaskOmit;
 };
 export type LogLevel = 'info' | 'query' | 'warn' | 'error';

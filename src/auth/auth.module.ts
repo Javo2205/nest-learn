@@ -7,6 +7,8 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { AuthTokensService } from './auth-tokens.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -27,8 +29,9 @@ import { JwtStrategy } from './jwt.strategy';
         },
       }),
     }),
+    MailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, AuthTokensService, JwtStrategy],
 })
 export class AuthModule {}

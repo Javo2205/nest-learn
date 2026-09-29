@@ -5,8 +5,8 @@ export declare class TasksService {
     private readonly prisma;
     constructor(prisma: PrismaService);
     create(createTaskDto: CreateTaskDto, userId: number): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -14,8 +14,8 @@ export declare class TasksService {
         userId: number;
     }>;
     findAll(userId: number): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -23,8 +23,8 @@ export declare class TasksService {
         userId: number;
     }[]>;
     findOne(id: number, userId: number): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -32,8 +32,8 @@ export declare class TasksService {
         userId: number;
     }>;
     update(id: number, updateTaskDto: UpdateTaskDto, userId: number): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -41,8 +41,8 @@ export declare class TasksService {
         userId: number;
     }>;
     remove(id: number, userId: number): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;

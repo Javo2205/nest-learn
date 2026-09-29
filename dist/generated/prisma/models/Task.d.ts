@@ -327,9 +327,6 @@ export type TaskUncheckedUpdateManyWithoutUserNestedInput = {
     updateMany?: Prisma.TaskUpdateManyWithWhereWithoutUserInput | Prisma.TaskUpdateManyWithWhereWithoutUserInput[];
     deleteMany?: Prisma.TaskScalarWhereInput | Prisma.TaskScalarWhereInput[];
 };
-export type BoolFieldUpdateOperationsInput = {
-    set?: boolean;
-};
 export type TaskCreateWithoutUserInput = {
     title: string;
     description?: string | null;

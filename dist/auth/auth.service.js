@@ -41,40 +41,131 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var AuthService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
 const prisma_service_1 = require("../prisma/prisma.service");
-let AuthService = class AuthService {
+const common_2 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
+const mail_service_1 = require("../mail/mail.service");
+const auth_tokens_service_1 = require("./auth-tokens.service");
+const client_1 = require("../generated/prisma/client");
+let AuthService = AuthService_1 = class AuthService {
     prisma;
     jwtService;
-    constructor(prisma, jwtService) {
+    authTokens;
+    mail;
+    config;
+    logger = new common_2.Logger(AuthService_1.name);
+    constructor(prisma, jwtService, authTokens, mail, config) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.authTokens = authTokens;
+        this.mail = mail;
+        this.config = config;
+    }
+    async sendVerification(userId, email) {
+        try {
+            const hours = Number(this.config.getOrThrow('EMAIL_VERIFICATION_EXPIRES_HOURS'));
+            const token = await this.authTokens.createToken(userId, client_1.AuthTokenType.EMAIL_VERIFICATION, hours * 60 * 60 * 1000);
+            await this.mail.sendVerificationEmail(email, token);
+        }
+        catch (error) {
+            this.logger.error(`Fallo al enviar verificación al usuario ${userId}`, error instanceof Error ? error.stack : undefined);
+        }
     }
     async register(registerDto) {
         const { email, password } = registerDto;
+        const message = 'Si el correo es válido, recibirás un enlace para confirmar tu cuenta';
         const existingUser = await this.prisma.user.findUnique({
             where: { email },
         });
         if (existingUser) {
-            throw new common_1.ConflictException('El email ya está registrado');
+            if (!existingUser.emailVerified) {
+                await this.sendVerification(existingUser.id, existingUser.email);
+            }
+            return { message };
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = await this.prisma.user.create({
+            data: { email, password: hashedPassword },
+            select: { id: true, email: true },
+        });
+        await this.sendVerification(user.id, user.email);
+        return { message };
+    }
+    async verifyEmail(token) {
+        const userId = await this.authTokens.consumeToken(token, client_1.AuthTokenType.EMAIL_VERIFICATION);
+        if (!userId) {
+            throw new common_1.BadRequestException('El enlace es inválido o ha expirado');
+        }
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { emailVerified: true },
+        });
+        return { message: 'Correo confirmado. Ya puedes iniciar sesión' };
+    }
+    async resendVerification(email) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (user && !user.emailVerified) {
+            await this.sendVerification(user.id, user.email);
+        }
+        return {
+            message: 'Si el correo es válido, recibirás un enlace para confirmar tu cuenta',
+        };
+    }
+    async forgotPassword(email) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (user) {
+            try {
+                const minutes = Number(this.config.getOrThrow('PASSWORD_RESET_EXPIRES_MINUTES'));
+                const token = await this.authTokens.createToken(user.id, client_1.AuthTokenType.PASSWORD_RESET, minutes * 60 * 1000);
+                await this.mail.sendPasswordResetEmail(user.email, token);
+            }
+            catch (error) {
+                this.logger.error(`Fallo al enviar recuperación al usuario ${user.id}`, error instanceof Error ? error.stack : undefined);
+            }
+        }
+        return {
+            message: 'Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña',
+        };
+    }
+    async resetPassword(token, newPassword) {
+        const userId = await this.authTokens.consumeToken(token, client_1.AuthTokenType.PASSWORD_RESET);
+        if (!userId) {
+            throw new common_1.BadRequestException('El enlace es inválido o ha expirado');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: userId },
             data: {
-                email,
                 password: hashedPassword,
-            },
-            select: {
-                id: true,
-                email: true,
-                createdAt: true,
+                emailVerified: true,
             },
         });
-        return user;
+        return { message: 'Contraseña actualizada. Ya puedes iniciar sesión' };
+    }
+    async changePassword(userId, currentPassword, newPassword) {
+        const user = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!user) {
+            throw new common_1.UnauthorizedException('Credenciales inválidas');
+        }
+        const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatches) {
+            throw new common_1.UnauthorizedException('La contraseña actual es incorrecta');
+        }
+        if (await bcrypt.compare(newPassword, user.password)) {
+            throw new common_1.BadRequestException('La nueva contraseña debe ser distinta a la actual');
+        }
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await this.prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
+        });
+        return { message: 'Contraseña actualizada correctamente' };
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -88,6 +179,9 @@ let AuthService = class AuthService {
         if (!passwordMatches) {
             throw new common_1.UnauthorizedException('Credenciales inválidas');
         }
+        if (!user.emailVerified) {
+            throw new common_1.ForbiddenException('Confirma tu correo antes de iniciar sesión');
+        }
         const payload = {
             sub: user.id,
             email: user.email,
@@ -98,9 +192,12 @@ let AuthService = class AuthService {
     }
 };
 exports.AuthService = AuthService;
-exports.AuthService = AuthService = __decorate([
+exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        auth_tokens_service_1.AuthTokensService,
+        mail_service_1.MailService,
+        config_1.ConfigService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map

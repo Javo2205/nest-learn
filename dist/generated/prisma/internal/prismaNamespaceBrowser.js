@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.TaskScalarFieldEnum = exports.UserScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
+exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.TaskScalarFieldEnum = exports.AuthTokenScalarFieldEnum = exports.UserScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/index-browser"));
 exports.Decimal = runtime.Decimal;
 exports.NullTypes = {
@@ -46,6 +46,7 @@ exports.JsonNull = runtime.JsonNull;
 exports.AnyNull = runtime.AnyNull;
 exports.ModelName = {
     User: 'User',
+    AuthToken: 'AuthToken',
     Task: 'Task'
 };
 exports.TransactionIsolationLevel = runtime.makeStrictEnum({
@@ -59,8 +60,18 @@ exports.UserScalarFieldEnum = {
     email: 'email',
     password: 'password',
     name: 'name',
+    emailVerified: 'emailVerified',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
+};
+exports.AuthTokenScalarFieldEnum = {
+    id: 'id',
+    tokenHash: 'tokenHash',
+    type: 'type',
+    expiresAt: 'expiresAt',
+    usedAt: 'usedAt',
+    createdAt: 'createdAt',
+    userId: 'userId'
 };
 exports.TaskScalarFieldEnum = {
     id: 'id',

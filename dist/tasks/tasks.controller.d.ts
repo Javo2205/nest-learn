@@ -12,8 +12,8 @@ export declare class TasksController {
     private readonly tasksService;
     constructor(tasksService: TasksService);
     create(createTaskDto: CreateTaskDto, request: AuthenticatedRequest): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -21,8 +21,8 @@ export declare class TasksController {
         userId: number;
     }>;
     findAll(request: AuthenticatedRequest): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -30,8 +30,8 @@ export declare class TasksController {
         userId: number;
     }[]>;
     findOne(id: number, request: AuthenticatedRequest): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -39,8 +39,8 @@ export declare class TasksController {
         userId: number;
     }>;
     update(id: number, updateTaskDto: UpdateTaskDto, request: AuthenticatedRequest): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
@@ -48,8 +48,8 @@ export declare class TasksController {
         userId: number;
     }>;
     remove(id: number, request: AuthenticatedRequest): Promise<{
-        title: string;
         description: string | null;
+        title: string;
         completed: boolean;
         createdAt: Date;
         updatedAt: Date;
