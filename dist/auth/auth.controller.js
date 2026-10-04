@@ -15,17 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const throttler_1 = require("@nestjs/throttler");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const register_dto_1 = require("./dto/register.dto");
-const login_response_dto_1 = require("../common/dto/login-response.dto");
-const user_response_dto_1 = require("../common/dto/user-response.dto");
 const verify_email_dto_1 = require("./dto/verify-email.dto");
 const resend_verification_dto_1 = require("./dto/resend-verification.dto");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
-const jwt_auth_guard_1 = require("./jwt-auth.guard");
 const change_password_dto_1 = require("./dto/change-password.dto");
+const jwt_auth_guard_1 = require("./jwt-auth.guard");
+const login_response_dto_1 = require("../common/dto/login-response.dto");
+const message_response_dto_1 = require("../common/dto/message-response.dto");
+const TOO_MANY_REQUESTS = 'Demasiadas peticiones. Espera un minuto.';
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -55,30 +57,35 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: (0, throttler_1.minutes)(1) } }),
     (0, common_1.Post)('register'),
     (0, swagger_1.ApiOperation)({ summary: 'Registrar un usuario nuevo' }),
     (0, swagger_1.ApiCreatedResponse)({
-        description: 'Usuario registrado correctamente',
-        type: user_response_dto_1.UserResponseDto,
+        description: 'Mensaje neutro; se envía correo de verificación si aplica',
+        type: message_response_dto_1.MessageResponseDto,
     }),
-    (0, swagger_1.ApiConflictResponse)({
-        description: 'El email ya está registrado',
-    }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Email o contraseña inválidos' }),
+    (0, swagger_1.ApiTooManyRequestsResponse)({ description: TOO_MANY_REQUESTS }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "register", null);
 __decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 5, ttl: (0, throttler_1.minutes)(1) } }),
     (0, common_1.Post)('login'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Iniciar sesión y obtener un JWT' }),
-    (0, swagger_1.ApiCreatedResponse)({
+    (0, swagger_1.ApiOkResponse)({
         description: 'JWT generado correctamente',
         type: login_response_dto_1.LoginResponseDto,
     }),
-    (0, swagger_1.ApiUnauthorizedResponse)({
-        description: 'Credenciales inválidas',
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Email o contraseña inválidos' }),
+    (0, swagger_1.ApiUnauthorizedResponse)({ description: 'Credenciales inválidas' }),
+    (0, swagger_1.ApiForbiddenResponse)({
+        description: 'Confirma tu correo antes de iniciar sesión',
     }),
+    (0, swagger_1.ApiTooManyRequestsResponse)({ description: TOO_MANY_REQUESTS }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
@@ -88,7 +95,7 @@ __decorate([
     (0, common_1.Post)('verify-email'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Confirmar el correo con el token recibido' }),
-    (0, swagger_1.ApiOkResponse)({ description: 'Correo confirmado' }),
+    (0, swagger_1.ApiOkResponse)({ description: 'Correo confirmado', type: message_response_dto_1.MessageResponseDto }),
     (0, swagger_1.ApiBadRequestResponse)({ description: 'Token inválido o expirado' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -96,20 +103,32 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verifyEmail", null);
 __decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: (0, throttler_1.minutes)(1) } }),
     (0, common_1.Post)('resend-verification'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Reenviar el correo de verificación' }),
-    (0, swagger_1.ApiOkResponse)({ description: 'Mensaje neutro, exista o no la cuenta' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Mensaje neutro, exista o no la cuenta',
+        type: message_response_dto_1.MessageResponseDto,
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Email inválido' }),
+    (0, swagger_1.ApiTooManyRequestsResponse)({ description: TOO_MANY_REQUESTS }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [resend_verification_dto_1.ResendVerificationDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "resendVerification", null);
 __decorate([
+    (0, throttler_1.Throttle)({ default: { limit: 3, ttl: (0, throttler_1.minutes)(1) } }),
     (0, common_1.Post)('forgot-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Solicitar enlace para restablecer la contraseña' }),
-    (0, swagger_1.ApiOkResponse)({ description: 'Mensaje neutro, exista o no la cuenta' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Mensaje neutro, exista o no la cuenta',
+        type: message_response_dto_1.MessageResponseDto,
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({ description: 'Email inválido' }),
+    (0, swagger_1.ApiTooManyRequestsResponse)({ description: TOO_MANY_REQUESTS }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
@@ -119,7 +138,10 @@ __decorate([
     (0, common_1.Post)('reset-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Restablecer la contraseña con el token recibido' }),
-    (0, swagger_1.ApiOkResponse)({ description: 'Contraseña actualizada' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Contraseña actualizada',
+        type: message_response_dto_1.MessageResponseDto,
+    }),
     (0, swagger_1.ApiBadRequestResponse)({
         description: 'Token inválido o expirado, o contraseña no válida',
     }),
@@ -131,9 +153,12 @@ __decorate([
 __decorate([
     (0, common_1.Patch)('change-password'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiBearerAuth)('JWT-auth'),
     (0, swagger_1.ApiOperation)({ summary: 'Cambiar la contraseña del usuario autenticado' }),
-    (0, swagger_1.ApiOkResponse)({ description: 'Contraseña actualizada' }),
+    (0, swagger_1.ApiOkResponse)({
+        description: 'Contraseña actualizada',
+        type: message_response_dto_1.MessageResponseDto,
+    }),
     (0, swagger_1.ApiUnauthorizedResponse)({
         description: 'JWT inválido o contraseña actual incorrecta',
     }),

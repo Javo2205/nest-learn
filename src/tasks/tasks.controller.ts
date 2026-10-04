@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TasksService } from './tasks.service';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -27,6 +29,8 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { TaskResponseDto } from '../common/dto/task-response.dto';
+import { FindTasksQueryDto } from './dto/find-tasks-query.dto';
+import { PaginatedTasksResponseDto } from '../common/dto/paginated-tasks-response.dto';
 
 interface AuthenticatedRequest extends Request {
   user: {
@@ -58,17 +62,26 @@ export class TasksController {
     return this.tasksService.create(createTaskDto, request.user.id);
   }
 
-  @ApiOperation({ summary: 'Obtener las tareas del usuario autenticado' })
+  @ApiOperation({
+    summary: 'Obtener las tareas del usuario autenticado (paginadas)',
+  })
   @ApiOkResponse({
-    description: 'Lista de tareas del usuario',
-    type: [TaskResponseDto],
+    description: 'Tareas paginadas con metadatos',
+    type: PaginatedTasksResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'Parámetros de consulta inválidos (page, limit, completed, sortBy u order)',
   })
   @ApiUnauthorizedResponse({
     description: 'JWT ausente, inválido o expirado',
   })
   @Get()
-  findAll(@Req() request: AuthenticatedRequest) {
-    return this.tasksService.findAll(request.user.id);
+  findAll(
+    @Req() request: AuthenticatedRequest,
+    @Query() query: FindTasksQueryDto,
+  ) {
+    return this.tasksService.findAll(request.user.id, query);
   }
 
   @ApiOperation({ summary: 'Obtener una tarea propia por ID' })

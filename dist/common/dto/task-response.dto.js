@@ -16,6 +16,8 @@ class TaskResponseDto {
     title;
     description;
     completed;
+    createdAt;
+    updatedAt;
     userId;
 }
 exports.TaskResponseDto = TaskResponseDto;
@@ -48,6 +50,20 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], TaskResponseDto.prototype, "completed", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '2026-09-28T23:17:43.713Z',
+        description: 'Fecha de creación (ISO 8601)',
+    }),
+    __metadata("design:type", Date)
+], TaskResponseDto.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        example: '2026-09-29T10:05:12.000Z',
+        description: 'Fecha de última actualización (ISO 8601)',
+    }),
+    __metadata("design:type", Date)
+], TaskResponseDto.prototype, "updatedAt", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         example: 1,

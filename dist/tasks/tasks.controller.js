@@ -20,6 +20,8 @@ const update_task_dto_1 = require("./dto/update-task.dto");
 const tasks_service_1 = require("./tasks.service");
 const swagger_1 = require("@nestjs/swagger");
 const task_response_dto_1 = require("../common/dto/task-response.dto");
+const find_tasks_query_dto_1 = require("./dto/find-tasks-query.dto");
+const paginated_tasks_response_dto_1 = require("../common/dto/paginated-tasks-response.dto");
 let TasksController = class TasksController {
     tasksService;
     constructor(tasksService) {
@@ -28,8 +30,8 @@ let TasksController = class TasksController {
     create(createTaskDto, request) {
         return this.tasksService.create(createTaskDto, request.user.id);
     }
-    findAll(request) {
-        return this.tasksService.findAll(request.user.id);
+    findAll(request, query) {
+        return this.tasksService.findAll(request.user.id, query);
     }
     findOne(id, request) {
         return this.tasksService.findOne(id, request.user.id);
@@ -59,18 +61,24 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "create", null);
 __decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Obtener las tareas del usuario autenticado' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Obtener las tareas del usuario autenticado (paginadas)',
+    }),
     (0, swagger_1.ApiOkResponse)({
-        description: 'Lista de tareas del usuario',
-        type: [task_response_dto_1.TaskResponseDto],
+        description: 'Tareas paginadas con metadatos',
+        type: paginated_tasks_response_dto_1.PaginatedTasksResponseDto,
+    }),
+    (0, swagger_1.ApiBadRequestResponse)({
+        description: 'Parámetros de consulta inválidos (page, limit, completed, sortBy u order)',
     }),
     (0, swagger_1.ApiUnauthorizedResponse)({
         description: 'JWT ausente, inválido o expirado',
     }),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, find_tasks_query_dto_1.FindTasksQueryDto]),
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "findAll", null);
 __decorate([

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { FindTasksQueryDto } from './dto/find-tasks-query.dto';
+import { Prisma } from '../generated/prisma/client';
 
 @Injectable()
 export class TasksService {
@@ -20,12 +22,36 @@ export class TasksService {
     });
   }
 
-  async findAll(userId: number) {
-    return this.prisma.task.findMany({
-      where: {
-        userId,
+  async findAll(userId: number, query: FindTasksQueryDto) {
+    const { page, limit, completed, search, sortBy, order } = query;
+
+    const where: Prisma.TaskWhereInput = {
+      userId,
+      ...(completed !== undefined && { completed }),
+      ...(search && {
+        title: { contains: search, mode: 'insensitive' },
+      }),
+    };
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.task.findMany({
+        where,
+        orderBy: { [sortBy]: order },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.task.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async findOne(id: number, userId: number) {

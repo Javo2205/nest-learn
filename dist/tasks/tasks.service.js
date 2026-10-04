@@ -29,12 +29,33 @@ let TasksService = class TasksService {
             },
         });
     }
-    async findAll(userId) {
-        return this.prisma.task.findMany({
-            where: {
-                userId,
+    async findAll(userId, query) {
+        const { page, limit, completed, search, sortBy, order } = query;
+        const where = {
+            userId,
+            ...(completed !== undefined && { completed }),
+            ...(search && {
+                title: { contains: search, mode: 'insensitive' },
+            }),
+        };
+        const [data, total] = await this.prisma.$transaction([
+            this.prisma.task.findMany({
+                where,
+                orderBy: { [sortBy]: order },
+                skip: (page - 1) * limit,
+                take: limit,
+            }),
+            this.prisma.task.count({ where }),
+        ]);
+        return {
+            data,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
             },
-        });
+        };
     }
     async findOne(id, userId) {
         const task = await this.prisma.task.findFirst({

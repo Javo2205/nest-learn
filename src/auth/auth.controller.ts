@@ -9,63 +9,64 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
-  ApiConflictResponse,
-  ApiCreatedResponse,
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiUnauthorizedResponse,
   ApiBadRequestResponse,
-  ApiOkResponse,
   ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { minutes, Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { LoginResponseDto } from '../common/dto/login-response.dto';
-import { UserResponseDto } from '../common/dto/user-response.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { LoginResponseDto } from '../common/dto/login-response.dto';
 import type { AuthenticatedRequest } from '../common/interfaces/authenticated-request.interface';
+import { MessageResponseDto } from '../common/dto/message-response.dto';
+
+const TOO_MANY_REQUESTS = 'Demasiadas peticiones. Espera un minuto.';
 
 @ApiTags('Autenticación')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  //   @ApiResponse({ status: 201, description: 'Usuario registrado correctamente' })
-  //   @ApiResponse({ status: 400, description: 'Email o contraseña inválidos' })
-  //   @ApiResponse({ status: 409, description: 'El email ya está registrado' })
+  @Throttle({ default: { limit: 5, ttl: minutes(1) } })
   @Post('register')
   @ApiOperation({ summary: 'Registrar un usuario nuevo' })
   @ApiCreatedResponse({
-    description: 'Usuario registrado correctamente',
-    type: UserResponseDto,
+    description: 'Mensaje neutro; se envía correo de verificación si aplica',
+    type: MessageResponseDto,
   })
-  @ApiConflictResponse({
-    description: 'El email ya está registrado',
-  })
+  @ApiBadRequestResponse({ description: 'Email o contraseña inválidos' })
+  @ApiTooManyRequestsResponse({ description: TOO_MANY_REQUESTS })
   register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
   }
 
-  //   @ApiOperation({ summary: 'Iniciar sesión y obtener un JWT' })
-  //   @ApiResponse({ status: 201, description: 'JWT generado correctamente' })
-  //   @ApiResponse({ status: 400, description: 'Email o contraseña inválidos' })
-  //   @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
+  @Throttle({ default: { limit: 5, ttl: minutes(1) } })
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Iniciar sesión y obtener un JWT' })
-  @ApiCreatedResponse({
+  @ApiOkResponse({
     description: 'JWT generado correctamente',
     type: LoginResponseDto,
   })
-  @ApiUnauthorizedResponse({
-    description: 'Credenciales inválidas',
+  @ApiBadRequestResponse({ description: 'Email o contraseña inválidos' })
+  @ApiUnauthorizedResponse({ description: 'Credenciales inválidas' })
+  @ApiForbiddenResponse({
+    description: 'Confirma tu correo antes de iniciar sesión',
   })
+  @ApiTooManyRequestsResponse({ description: TOO_MANY_REQUESTS })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
@@ -73,24 +74,36 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Confirmar el correo con el token recibido' })
-  @ApiOkResponse({ description: 'Correo confirmado' })
+  @ApiOkResponse({ description: 'Correo confirmado', type: MessageResponseDto })
   @ApiBadRequestResponse({ description: 'Token inválido o expirado' })
   verifyEmail(@Body() dto: VerifyEmailDto) {
     return this.authService.verifyEmail(dto.token);
   }
 
+  @Throttle({ default: { limit: 3, ttl: minutes(1) } })
   @Post('resend-verification')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reenviar el correo de verificación' })
-  @ApiOkResponse({ description: 'Mensaje neutro, exista o no la cuenta' })
+  @ApiOkResponse({
+    description: 'Mensaje neutro, exista o no la cuenta',
+    type: MessageResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Email inválido' })
+  @ApiTooManyRequestsResponse({ description: TOO_MANY_REQUESTS })
   resendVerification(@Body() dto: ResendVerificationDto) {
     return this.authService.resendVerification(dto.email);
   }
 
+  @Throttle({ default: { limit: 3, ttl: minutes(1) } })
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Solicitar enlace para restablecer la contraseña' })
-  @ApiOkResponse({ description: 'Mensaje neutro, exista o no la cuenta' })
+  @ApiOkResponse({
+    description: 'Mensaje neutro, exista o no la cuenta',
+    type: MessageResponseDto,
+  })
+  @ApiBadRequestResponse({ description: 'Email inválido' })
+  @ApiTooManyRequestsResponse({ description: TOO_MANY_REQUESTS })
   forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
@@ -98,7 +111,10 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Restablecer la contraseña con el token recibido' })
-  @ApiOkResponse({ description: 'Contraseña actualizada' })
+  @ApiOkResponse({
+    description: 'Contraseña actualizada',
+    type: MessageResponseDto,
+  })
   @ApiBadRequestResponse({
     description: 'Token inválido o expirado, o contraseña no válida',
   })
@@ -108,9 +124,12 @@ export class AuthController {
 
   @Patch('change-password')
   @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Cambiar la contraseña del usuario autenticado' })
-  @ApiOkResponse({ description: 'Contraseña actualizada' })
+  @ApiOkResponse({
+    description: 'Contraseña actualizada',
+    type: MessageResponseDto,
+  })
   @ApiUnauthorizedResponse({
     description: 'JWT inválido o contraseña actual incorrecta',
   })
